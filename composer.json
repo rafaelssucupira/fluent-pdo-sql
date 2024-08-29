@@ -1,0 +1,19 @@
+{
+    "name": "rafaelssucupira/fluent-sql",
+    "description": "API para gerenciamento de conexoes e operações com o banco mySQL",
+    "authors": [
+        {
+            "name": "rafaelssucupira",
+            "email": "rafaelssucupira@gmail.com",
+            "role" : "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "FluentSQL\\": "src/"
+        }
+    }
+}
