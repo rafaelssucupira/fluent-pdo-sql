@@ -1,17 +1,10 @@
 # FluentSQL
-
-
-### API para gerenciamento de conexoes e operações com o banco mySQL
-
-
-### INSTALAÇÃO
-
+**API para gerenciamento de conexoes e operações com o banco mySQL, usando design patters FluentAPI**
+### Instalação
 ```
 composer require rafaelssucupira/fluent-sql
 ```
-
-### EXEMPLO
-
+### Exemplo
 ```
 <?php
 require_once ("vendor/autoload.php");
