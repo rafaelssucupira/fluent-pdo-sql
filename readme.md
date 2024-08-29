@@ -1,17 +1,17 @@
-#
-FluentSQL
+# FluentSQL
 
-###
-API para gerenciamento de conexoes e operações com o banco mySQL
 
-###
-INSTALAÇÃO
+### API para gerenciamento de conexoes e operações com o banco mySQL
+
+
+### INSTALAÇÃO
+
 ```
 composer require rafaelssucupira/fluent-sql
-````
+```
 
-###
-EXEMPLO
+### EXEMPLO
+
 ```
 <?php
 require_once ("vendor/autoload.php");
