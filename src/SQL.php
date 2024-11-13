@@ -2,32 +2,41 @@
 namespace FluentSQL;
 use PDO;
 use PDOException;
+use LoggerApp\LoggerApp;
 
-class SQL {
+class SQL extends LoggerApp {
 
-    public $rows = 0;
-    public $stmt;
-    public $conn;
-    public $error = null;
-    public $types = array(
-        "normal" => PDO::PARAM_STR,
-        "upper"  => PDO::PARAM_STR,
-        "int"   => PDO::PARAM_INT
-    );
+    function __construct( 
+        $host,
+        $db,
+        $user,
+        $passwd,
+        private $username   = "INDEFINIDO",
+        public $rows        = 0,
+        public $error       = null,
+        public $types       = array(
+            "normal"        => PDO::PARAM_STR,
+            "upper"         => PDO::PARAM_STR,
+            "int"           => PDO::PARAM_INT 
+        ),
+        public $params      = null,
+        public $stmt        = null,
+        public $conn        = null
+    ) 
+    {
 
-    //CONSTRUTOR
-    function __construct($host, $db, $user, $passwd) {
+        date_default_timezone_set( 'America/Sao_Paulo' );
+        $this->conn = new PDO( "mysql:host=$host;dbname=$db;charset=utf8", $user, $passwd );
 
-        date_default_timezone_set('America/Sao_Paulo');
-        $this->conn = new PDO( "mysql:host=".$host.";dbname=".$db.";charset=utf8", $user, $passwd );
-
+        parent::__construct( "logsQuerys-".date("dmY"), "SQL" );
+        
     }
 
     function prepareQuery( $rawQuery, $params = array() ) {
 
-        $this->stmt = $this->conn->prepare( $rawQuery );
+        $this->params   = $params;
+        $this->stmt     = $this->conn->prepare( $rawQuery );
         foreach( $params as $key => $value ) {
-
             $this->setParam( $value );
         }
 
@@ -43,7 +52,7 @@ class SQL {
         catch( PDOException $e ) {
             $this->error = array(
                 "codeError" => $e->getCode(),
-                "msg" => $e->getMessage()
+                "msg"       => $e->getMessage()
             );
         }
         
@@ -55,12 +64,12 @@ class SQL {
 
         ob_start();
             $this->stmt->debugDumpParams();
-            $sqlcomand = ob_get_contents();
+            $command = ob_get_contents();
         ob_end_clean();
 
-        $file = fopen('sqlcomand.txt', 'w') or die('Unable to open file!');
-        fwrite($file, $sqlcomand . "\n" . json_encode($this->stmt->errorInfo()) );
-        fclose($file);
+        $this->push("info", "Dados enviados por ".$this->username .": " . json_encode($this->params) );
+        $this->push("info",  $command );
+        $this->push("info", "Erros : " . json_encode($this->stmt->errorInfo()) . "\n" );
 
         return $this;
     }
@@ -79,9 +88,9 @@ class SQL {
     function transformValue( $tpys, $value ) {
 
         $transformed = array(
-            "normal" => function($value){ return $value; },
-            "int" => function($value){ return $value; },
-            "upper"  => function($value){ return mb_strtoupper($value); },
+            "normal"    => function($value){ return $value; },
+            "int"       => function($value){ return $value; },
+            "upper"     => function($value){ return mb_strtoupper($value); },
         );
         return $transformed[ $tpys ]($value);
      }

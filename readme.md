@@ -10,7 +10,7 @@ composer require rafaelssucupira/fluent-sql
 require_once ("vendor/autoload.php");
 use FluentSQL\SQL;
 
-$conn = new SQL( "localhost", "db", "user", "passwd" );
+$conn = new SQL( "localhost", "db", "user", "passwd", "username" ?? null );
 
 $result = $conn
             ->prepareQuery( "SELECT * FROM users" )
