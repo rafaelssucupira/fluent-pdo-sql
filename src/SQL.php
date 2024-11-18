@@ -14,14 +14,14 @@ class SQL extends LoggerApp {
         private $username   = "INDEFINIDO",
         public $rows        = 0,
         public $error       = null,
+        public $params      = null,
+        public $stmt        = null,
+        public $conn        = null,
         public $types       = array(
             "normal"        => PDO::PARAM_STR,
             "upper"         => PDO::PARAM_STR,
             "int"           => PDO::PARAM_INT 
-        ),
-        public $params      = null,
-        public $stmt        = null,
-        public $conn        = null
+        )
     ) 
     {
 
@@ -47,7 +47,11 @@ class SQL extends LoggerApp {
 
         try {
             $this->stmt->execute();
-            $this->rows += $this->stmt->rowCount();
+
+            preg_match( "/^(?<command>SELECT)+/i", $this->stmt->queryString, $match );
+            $this->rows += strtolower( $match["command"] ) === "select" ? 0 : $this->stmt->rowCount();
+            
+            
         }
         catch( PDOException $e ) {
             $this->error = array(
@@ -75,7 +79,8 @@ class SQL extends LoggerApp {
     }
 
     function build($returnData = false) {
-        if($this->error === null) {
+        if($this->error === null) 
+        {
             if($returnData === true) {
                 return $this->stmt->fetchAll( PDO::FETCH_ASSOC );
             }
