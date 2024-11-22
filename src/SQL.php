@@ -28,7 +28,7 @@ class SQL extends LoggerApp {
         date_default_timezone_set( 'America/Sao_Paulo' );
         $this->conn = new PDO( "mysql:host=$host;dbname=$db;charset=utf8", $user, $passwd );
 
-        parent::__construct( "logsQuerys-".date("dmY"), "SQL" );
+        parent::__construct( date("dmY"), "SQL" );
         
     }
 
@@ -49,7 +49,7 @@ class SQL extends LoggerApp {
             $this->stmt->execute();
 
             preg_match( "/^(?<command>SELECT)+/i", $this->stmt->queryString, $match );
-            $this->rows += strtolower( $match["command"] ) === "select" ? 0 : $this->stmt->rowCount();
+            $this->rows += isset( $match["command"] ) && strtolower( $match["command"] ) === "select" ? 0 : $this->stmt->rowCount();
             
             
         }
