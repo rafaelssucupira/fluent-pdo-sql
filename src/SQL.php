@@ -71,7 +71,7 @@ class SQL extends LoggerApp {
             $command = ob_get_contents();
         ob_end_clean();
 
-        $this->push("info", "Dados enviados por ".$this->username .": " . json_encode($this->params) );
+        $this->push("info", "Dados enviados por ".$this->username .": " . json_encode( defined("PARAMETERS") ? constant("PARAMETERS")["params"] : $this->params ) );
         $this->push("info",  $command );
         $this->push("info", "Erros : " . json_encode($this->stmt->errorInfo()) . "\n" );
 
