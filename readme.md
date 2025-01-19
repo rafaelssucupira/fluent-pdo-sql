@@ -1,7 +1,7 @@
 # FluentSQL
 API para gerenciamento de conexoes e operações com o banco mySQL, usando design patters FluentAPI!<br/>
 > [!NOTE]
-> É necessário configurar para gravação e logs! [Link Text](#logs).
+> É necessário configurar para gravação de [logs]!(#logs).
 ## Instalação
 ```
 composer require rafaelssucupira/fluent-sql
