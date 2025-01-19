@@ -7,7 +7,7 @@ API para gerenciamento de conexoes e operações com o banco mySQL, usando desig
 composer require rafaelssucupira/fluent-sql
 ```
 ## Logs
-o pacote registra os logs em um db particular, para que a `função sqlCommand` funcione é necessário criar um database com nome log
+o pacote registra os logs em um db particular. Para que a `função sqlCommand` funcione é necessário criar um database para o armazenamento dos logs
 ```
 CREATE TABLE `log` (
   `log_codigo` int(11) unsigned NOT NULL AUTO_INCREMENT,
