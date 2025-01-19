@@ -2,9 +2,8 @@
 namespace FluentSQL;
 use PDO;
 use PDOException;
-use LoggerApp\LoggerApp;
 
-class SQL extends LoggerApp {
+class SQL {
 
     function __construct( 
         $host,
@@ -22,14 +21,10 @@ class SQL extends LoggerApp {
             "upper"         => PDO::PARAM_STR,
             "int"           => PDO::PARAM_INT 
         )
-    ) 
-    {
-
+    )  {
+        
         date_default_timezone_set( 'America/Sao_Paulo' );
         $this->conn = new PDO( "mysql:host=$host;dbname=$db;charset=utf8", $user, $passwd );
-
-        parent::__construct( date("dmY"), "SQL" );
-        
     }
 
     function prepareQuery( $rawQuery, $params = array() ) {
