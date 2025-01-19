@@ -64,6 +64,35 @@ class SQL extends LoggerApp {
 
     }
 
+    function registerCommand($command, $errors ) :void
+        {
+            try {
+
+                $params = json_encode( defined("PARAMETERS") ? constant("PARAMETERS")["params"] : $this->params );
+                $regex = '/(?<SQL>.*)(?=Params)/ms';
+                preg_match($regex, $command, $matches);
+
+                $params = array(
+                    ":LOG_DESCRICAO"    => $matches["SQL"],
+                    ":LOG_DATAHORA"     => date("Y-m-d H:i:s"),
+                    ":LOG_PARAMETROS"   => $params,
+                    ":LOG_ERRORS"       => json_encode($errors),
+                    ":USU_NOME"         => $this->username
+                );
+    
+                $stmt   = $this->conn->prepare( "INSERT INTO log ( log_descricao, log_datahora, log_parametros, log_errors, usu_nome ) values ( :LOG_DESCRICAO, :LOG_DATAHORA, :LOG_PARAMETROS, :LOG_ERRORS, :USU_NOME )" );
+                $stmt->execute($params);
+    
+                $stmt->rowCount() === 0 ? throw new Exception("Erro ao registrar log de $this->username.") : "";
+
+            }
+
+            catch(Exception $e) {
+                error_log( $e->getMessage() );
+            }
+                
+        }
+
     function sqlCommand() {
 
         ob_start();
@@ -71,21 +100,22 @@ class SQL extends LoggerApp {
             $command = ob_get_contents();
         ob_end_clean();
 
-        $this->push("info", "Dados enviados por ".$this->username .": " . json_encode( defined("PARAMETERS") ? constant("PARAMETERS")["params"] : $this->params ) );
-        $this->push("info",  $command );
-        $this->push("info", "Erros : " . json_encode($this->stmt->errorInfo()) . "\n" );
+        $errors = $this->stmt->errorInfo();
+
+        $this->registerCommand( $command, $errors );
 
         return $this;
     }
 
     function build($returnData = false) {
         if($this->error === null) 
-        {
-            if($returnData === true) {
-                return $this->stmt->fetchAll( PDO::FETCH_ASSOC );
+            {
+                if($returnData === true) {
+                    return $this->stmt->fetchAll( PDO::FETCH_ASSOC );
+                }
+                return $this->stmt;
             }
-            return $this->stmt;
-        }
+
         return $this->error;
 
     }
