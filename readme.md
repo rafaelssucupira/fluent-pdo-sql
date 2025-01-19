@@ -1,4 +1,4 @@
-# FluentSQL
+# fluent-sql
 API para gerenciamento de conexoes e operações com o banco mySQL, usando design patters FluentAPI!<br/>
 > [!NOTE]
 > É necessário configurar para gravação de _[logs](#logs)_
