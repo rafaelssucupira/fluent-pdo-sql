@@ -63,7 +63,10 @@ class SQL {
         {
             try {
 
-                $params = json_encode( defined("PARAMETERS") ? constant("PARAMETERS")["params"] : $this->params );
+                $params = json_encode( 
+                    defined("PARAMETERS") ? constant("PARAMETERS")["params"] : $this->params,
+                    JSON_PRETTY_PRINT 
+                );
                 $regex = '/Sent SQL:(?<SQL>.*)(?=Params)/ms';
                 preg_match($regex, $command, $matches);
 
