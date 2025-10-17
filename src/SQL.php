@@ -64,11 +64,11 @@ class SQL {
             try {
 
                 $params = json_encode( defined("PARAMETERS") ? constant("PARAMETERS")["params"] : $this->params );
-                $regex = '/(?<SQL>.*)(?=Params)/ms';
+                $regex = '/Sent SQL:(?<SQL>.*)(?=Params)/ms';
                 preg_match($regex, $command, $matches);
 
                 $params = array(
-                    ":LOG_DESCRICAO"    => $matches["SQL"],
+                    ":LOG_DESCRICAO"    => $matches["SQL"] ?? "INDEFINIDO",
                     ":LOG_DATAHORA"     => date("Y-m-d H:i:s"),
                     ":LOG_PARAMETROS"   => $params,
                     ":LOG_ERRORS"       => json_encode($errors),
