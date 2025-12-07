@@ -59,7 +59,7 @@ class SQL {
 
     }
 
-    function registerCommand($command, $errors ) :void
+    function registerCommand($command, $errors, $infoAdicional ) :void
         {
             try {
 
@@ -75,10 +75,11 @@ class SQL {
                     ":LOG_DATAHORA"     => date("Y-m-d H:i:s"),
                     ":LOG_PARAMETROS"   => $params,
                     ":LOG_ERRORS"       => json_encode($errors),
+                    ":LOG_INFOADICIONAL"=> $infoAdicional,
                     ":USU_NOME"         => $this->username
                 );
     
-                $stmt   = $this->conn->prepare( "INSERT INTO log ( log_descricao, log_datahora, log_parametros, log_errors, usu_nome ) values ( :LOG_DESCRICAO, :LOG_DATAHORA, :LOG_PARAMETROS, :LOG_ERRORS, :USU_NOME )" );
+                $stmt   = $this->conn->prepare( "INSERT INTO log ( log_descricao, log_datahora, log_parametros, log_errors, log_infoadicional, usu_nome ) values ( :LOG_DESCRICAO, :LOG_DATAHORA, :LOG_PARAMETROS, :LOG_ERRORS, :LOG_INFOADICIONAL, :USU_NOME )" );
                 $stmt->execute($params);
     
                 $stmt->rowCount() === 0 ? throw new Exception("Erro ao registrar log de $this->username.") : "";
@@ -91,7 +92,7 @@ class SQL {
                 
         }
 
-    function sqlCommand() {
+    function sqlCommand($infoAdicional) {
 
         ob_start();
             $this->stmt->debugDumpParams();
@@ -100,7 +101,7 @@ class SQL {
 
         $errors = $this->stmt->errorInfo();
 
-        $this->registerCommand( $command, $errors );
+        $this->registerCommand( $command, $errors, $infoAdicional );
 
         return $this;
     }

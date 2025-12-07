@@ -16,6 +16,7 @@ CREATE TABLE `log` (
   `log_errors` text,
   `log_datahora` datetime DEFAULT NULL,
   `usu_nome` varchar(30) NOT NULL DEFAULT '',
+  `log_infoadicional` varchar(30) NOT NULL DEFAULT '',
   PRIMARY KEY (`log_codigo`)
 ) ENGINE=MyISAM AUTO_INCREMENT=43335 DEFAULT CHARSET=utf8 COMMENT='Logs';
 ```
