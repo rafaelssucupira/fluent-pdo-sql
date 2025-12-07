@@ -92,7 +92,7 @@ class SQL {
                 
         }
 
-    function sqlCommand($infoAdicional) {
+    function sqlCommand($infoAdicional = "") {
 
         ob_start();
             $this->stmt->debugDumpParams();
