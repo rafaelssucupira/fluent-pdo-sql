@@ -59,40 +59,22 @@ class SQL {
 
     }
 
-    function registerCommand($command, $errors, $infoAdicional ) :void
-        {
-            try {
 
-                $params = json_encode( 
-                    defined("PARAMETERS") ? constant("PARAMETERS")["params"] : $this->params,
-                    JSON_PRETTY_PRINT 
-                );
-                $regex = '/Sent SQL:(?<SQL>.*)(?=Params)/ms';
-                preg_match($regex, $command, $matches);
 
-                $params = array(
-                    ":LOG_DESCRICAO"    => $matches["SQL"] ?? "INDEFINIDO",
-                    ":LOG_DATAHORA"     => date("Y-m-d H:i:s"),
-                    ":LOG_PARAMETROS"   => $params,
-                    ":LOG_ERRORS"       => json_encode($errors),
-                    ":LOG_INFOADICIONAL"=> $infoAdicional,
-                    ":USU_NOME"         => $this->username
-                );
-    
-                $stmt   = $this->conn->prepare( "INSERT INTO log ( log_descricao, log_datahora, log_parametros, log_errors, log_infoadicional, usu_nome ) values ( :LOG_DESCRICAO, :LOG_DATAHORA, :LOG_PARAMETROS, :LOG_ERRORS, :LOG_INFOADICIONAL, :USU_NOME )" );
-                $stmt->execute($params);
-    
-                $stmt->rowCount() === 0 ? throw new Exception("Erro ao registrar log de $this->username.") : "";
+    function registerFile($infoAdicional = "") {
+        ob_start();
+            $this->stmt->debugDumpParams();
+            $command = ob_get_contents();
+        ob_end_clean();
 
-            }
+        $errors = $this->stmt->errorInfo();
 
-            catch(Exception $e) {
-                error_log( $e->getMessage() );
-            }
-                
-        }
+        $this->saveCommand( "file", $command, $errors, $infoAdicional );
 
-    function sqlCommand($infoAdicional = "") {
+        return $this;
+    }
+
+    function registerDb($infoAdicional = "") {
 
         ob_start();
             $this->stmt->debugDumpParams();
@@ -101,10 +83,71 @@ class SQL {
 
         $errors = $this->stmt->errorInfo();
 
-        $this->registerCommand( $command, $errors, $infoAdicional );
+        $this->saveCommand( "db", $command, $errors, $infoAdicional );
 
         return $this;
     }
+
+    function saveCommand($type = "db", $command, $errors, $infoAdicional ) :void
+        {
+            try {
+                $paramsDecode  = defined("PARAMETERS") ? constant("PARAMETERS")["params"] : $this->params;
+                
+                $regex = '/Sent SQL:(?<SQL>.*)(?=Params)/ms';
+                preg_match($regex, $command, $matches);
+                if($type === "db") 
+                    {
+                        $params = array(
+                            ":LOG_DESCRICAO"    => $matches["SQL"] ?? "INDEFINIDO",
+                            ":LOG_DATAHORA"     => date("Y-m-d H:i:s"),
+                            ":LOG_PARAMETROS"   => json_encode($paramsDecode, JSON_PRETTY_PRINT),
+                            ":LOG_ERRORS"       => json_encode($errors),
+                            ":LOG_INFOADICIONAL"=> $infoAdicional,
+                            ":USU_NOME"         => $this->username
+                        );
+                        $stmt   = $this->conn->prepare( "INSERT INTO log ( log_descricao, log_datahora, log_parametros, log_errors, log_infoadicional, usu_nome ) values ( :LOG_DESCRICAO, :LOG_DATAHORA, :LOG_PARAMETROS, :LOG_ERRORS, :LOG_INFOADICIONAL, :USU_NOME )" );
+                        $stmt->execute($params);
+                        $stmt->rowCount() === 0 ? throw new \Exception("Erro ao registrar log de $this->username.") : "";
+                    }
+                else 
+                    {
+                        $params = array(
+                            "log_descricao"    => $matches["SQL"] ?? "INDEFINIDO",
+                            "log_datahora"     => date("Y-m-d H:i:s"),
+                            "log_parametros"   => $paramsDecode,
+                            "log_errors"       => $errors,
+                            "log_infoadicional"=> $infoAdicional,
+                            "usu_nome"         => $this->username
+                        );
+                        $dir      = "./logs" . DIRECTORY_SEPARATOR . "daily";
+                        $filename = date("dmY").".txt";
+                        $path     = $dir . DIRECTORY_SEPARATOR . $filename;
+                        if(is_dir($dir) === false) {
+                            if(mkdir($dir, 0775, true) === false) {
+                                error_log("Não foi possivel gerar o path do arquivo.");
+                                return;
+                            }
+                        }
+
+                        $resultWrite = file_put_contents($path, json_encode($params) . PHP_EOL, FILE_APPEND | LOCK_EX);
+                        if($resultWrite === false) {
+                            error_log("Nao foi possivel gravar no arquivo: " . $path);
+                            return;
+                        }
+                    }
+
+
+            }
+
+            catch(\Exception $e) {
+                error_log( $e->getMessage() );
+            }
+                
+        }
+
+    function sqlCommand($infoAdicional = "") { // para manter compatibilidade com versoes antigas
+        $this->registerDb($infoAdicional);
+    }    
 
     function build($returnData = false) {
         if($this->error === null) 
