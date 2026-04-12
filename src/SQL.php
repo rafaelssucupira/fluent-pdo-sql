@@ -91,32 +91,44 @@ class SQL {
     function saveCommand($type = "db", $command, $errors, $infoAdicional ) :void
         {
             try {
-                $paramsDecode  = defined("PARAMETERS") ? constant("PARAMETERS")["params"] : $this->params;
+                // $paramsDecode  = defined("PARAMETERS") ? constant("PARAMETERS")["params"] : "INDEFINIDO";
                 
+                $parameters  = defined("PARAMETERS") ? constant("PARAMETERS") : array();
+                $queryParams = $parameters["params"] ?? array();
+                $action      = $parameters["action"] ?? "INDEFINIDO";
+                $router      = $parameters["router"] ?? "INDEFINIDO";
+
                 $regex = '/Sent SQL:(?<SQL>.*)(?=Params)/ms';
                 preg_match($regex, $command, $matches);
                 if($type === "db") 
                     {
-                        $params = array(
+                        $dbParams = array(
                             ":LOG_DESCRICAO"    => $matches["SQL"] ?? "INDEFINIDO",
                             ":LOG_DATAHORA"     => date("Y-m-d H:i:s"),
-                            ":LOG_PARAMETROS"   => json_encode($paramsDecode, JSON_PRETTY_PRINT),
+                            ":LOG_PARAMETROS"   => json_encode($queryParams, JSON_PRETTY_PRINT),
                             ":LOG_ERRORS"       => json_encode($errors),
                             ":LOG_INFOADICIONAL"=> $infoAdicional,
                             ":USU_NOME"         => $this->username
                         );
                         $stmt   = $this->conn->prepare( "INSERT INTO log ( log_descricao, log_datahora, log_parametros, log_errors, log_infoadicional, usu_nome ) values ( :LOG_DESCRICAO, :LOG_DATAHORA, :LOG_PARAMETROS, :LOG_ERRORS, :LOG_INFOADICIONAL, :USU_NOME )" );
-                        $stmt->execute($params);
+                        $stmt->execute($dbParams);
                         $stmt->rowCount() === 0 ? throw new \Exception("Erro ao registrar log de $this->username.") : "";
                     }
                 else 
                     {
-                        $params = array(
+                        $paramsEncode = json_encode($queryParams, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                        $paramsEncode = str_replace(["\r", "\n", "\t"], '', $paramsEncode);
+                        $paramsEncode = preg_replace('/\s+/', ' ', $paramsEncode);
+                        $paramsEncode = trim($paramsEncode);
+                        $paramsEncode = preg_replace('/^\[\d+\]\s*/', '', $paramsEncode);
+                        $filePayload = array(
                             "log_descricao"    => $matches["SQL"] ?? "INDEFINIDO",
                             "log_datahora"     => date("Y-m-d H:i:s"),
-                            "log_parametros"   => $paramsDecode,
-                            "log_errors"       => $errors,
-                            "log_infoadicional"=> $infoAdicional,
+                            "log_parametros"   => $paramsEncode,
+                            "log_errors"       => json_encode($errors, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                            "log_action"       => $action,
+                            "log_router"       => $router,
                             "usu_nome"         => $this->username
                         );
                         $dir      = "./logs" . DIRECTORY_SEPARATOR . "daily";
@@ -129,17 +141,16 @@ class SQL {
                             }
                         }
 
-                        $resultWrite = file_put_contents($path, json_encode($params) . PHP_EOL, FILE_APPEND | LOCK_EX);
+                        $resultWrite = file_put_contents($path, json_encode($filePayload) . PHP_EOL, FILE_APPEND | LOCK_EX);
                         if($resultWrite === false) {
                             error_log("Nao foi possivel gravar no arquivo: " . $path);
                             return;
                         }
                     }
 
-
             }
 
-            catch(\Exception $e) {
+            catch(\Throwable $e) {
                 error_log( $e->getMessage() );
             }
                 
