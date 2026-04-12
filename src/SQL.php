@@ -100,10 +100,16 @@ class SQL {
 
                 $regex = '/Sent SQL:(?<SQL>.*)(?=Params)/ms';
                 preg_match($regex, $command, $matches);
+                
+                $sqlDesc = str_replace(["\r", "\n", "\t"], '', ($matches["SQL"] ?? "INDEFINIDO") );
+                $sqlDesc = preg_replace('/\s+/', ' ', $sqlDesc);
+                $sqlDesc = trim($sqlDesc);
+                $sqlDesc = preg_replace('/^\[\d+\]\s*/', '', $sqlDesc);
+
                 if($type === "db") 
                     {
                         $dbParams = array(
-                            ":LOG_DESCRICAO"    => $matches["SQL"] ?? "INDEFINIDO",
+                            ":LOG_DESCRICAO"    => $sqlDesc,
                             ":LOG_DATAHORA"     => date("Y-m-d H:i:s"),
                             ":LOG_PARAMETROS"   => json_encode($queryParams, JSON_PRETTY_PRINT),
                             ":LOG_ERRORS"       => json_encode($errors),
@@ -116,17 +122,11 @@ class SQL {
                     }
                 else 
                     {
-                        $paramsEncode = json_encode($queryParams, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-                        $paramsEncode = str_replace(["\r", "\n", "\t"], '', $paramsEncode);
-                        $paramsEncode = preg_replace('/\s+/', ' ', $paramsEncode);
-                        $paramsEncode = trim($paramsEncode);
-                        $paramsEncode = preg_replace('/^\[\d+\]\s*/', '', $paramsEncode);
                         $filePayload = array(
-                            "log_descricao"    => $matches["SQL"] ?? "INDEFINIDO",
+                            "log_descricao"    => $sqlDesc,
                             "log_datahora"     => date("Y-m-d H:i:s"),
-                            "log_parametros"   => $paramsEncode,
-                            "log_errors"       => json_encode($errors, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                            "log_parametros"   => $queryParams,
+                            "log_errors"       => $errors,
                             "log_action"       => $action,
                             "log_router"       => $router,
                             "usu_nome"         => $this->username
