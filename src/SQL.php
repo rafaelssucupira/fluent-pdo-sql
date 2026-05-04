@@ -19,7 +19,8 @@ class SQL {
         public $types       = array(
             "normal"        => PDO::PARAM_STR,
             "upper"         => PDO::PARAM_STR,
-            "int"           => PDO::PARAM_INT 
+            "int"           => PDO::PARAM_INT,
+            "date"          => PDO::PARAM_STR
         )
     )  {
         
@@ -91,7 +92,6 @@ class SQL {
     function saveCommand($type = "db", $command, $errors, $infoAdicional ) :void
         {
             try {
-                // $paramsDecode  = defined("PARAMETERS") ? constant("PARAMETERS")["params"] : "INDEFINIDO";
                 
                 $parameters  = defined("PARAMETERS") ? constant("PARAMETERS") : array();
                 $queryParams = $parameters["params"] ?? array();
@@ -123,12 +123,12 @@ class SQL {
                 else 
                     {
                         $filePayload = array(
-                            "log_descricao"    => $sqlDesc,
-                            "log_datahora"     => date("Y-m-d H:i:s"),
-                            "log_parametros"   => $queryParams,
-                            "log_errors"       => $errors,
                             "log_action"       => $action,
                             "log_router"       => $router,
+                            "log_datahora"     => date("Y-m-d H:i:s"),
+                            "log_descricao"    => $sqlDesc,
+                            "log_parametros"   => $queryParams,
+                            "log_errors"       => $errors,
                             "usu_nome"         => $this->username
                         );
                         $dir      = "./logs" . DIRECTORY_SEPARATOR . "daily";
@@ -176,6 +176,7 @@ class SQL {
     function transformValue( $tpys, $value ) {
 
         $transformed = array(
+            "date"      => function($value){ return $value === "" ? null : $value; },    
             "normal"    => function($value){ return $value; },
             "int"       => function($value){ return $value; },
             "upper"     => function($value){ return mb_strtoupper($value); },
@@ -187,7 +188,7 @@ class SQL {
      function setParam($value) : void {
 
         $transform  =  $this->transformValue( $value["type"], $value["value"] );
-        $tpys       = $this->types[ $value["type"] ];
+        $tpys       = $transform === null ? PDO::PARAM_NULL : $this->types[ $value["type"] ];
         $this->stmt->bindParam(
             $value["key"],
             $transform,
