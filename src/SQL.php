@@ -89,7 +89,7 @@ class SQL {
         return $this;
     }
 
-    function saveCommand($type = "db", $command, $errors, $infoAdicional ) :void
+    function saveCommand($type, $command, $errors, $infoAdicional ) :void
         {
             try {
                 
